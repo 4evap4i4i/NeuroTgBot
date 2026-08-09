@@ -12,7 +12,7 @@ router_message = Router()
 async def message(message: Message, state: FSMContext, command: CommandObject):
     try:
         data = await state.get_value("context")
-    except AttributeError:
+    except Exception:
         data = []
         
     data.update({"role": "user", "content": f"{command.args}"})
