@@ -10,12 +10,9 @@ router_message = Router()
 
 @router_message.message(Command("say"))
 async def message(message: Message, state: FSMContext, command: CommandObject):
-    try:
-        data = await state.get_value("context")
-    except Exception:
-        data = []
+    data = await state.get_value("context", [])
         
-    data.update({"role": "user", "content": f"{command.args}"})
+    data.append({"role": "user", "content": f"{command.args}"})
 
     async with AsyncOpenAI(
             api_key=ai,  # This is the default and can be omitted
@@ -28,5 +25,5 @@ async def message(message: Message, state: FSMContext, command: CommandObject):
             )
             await message.answer(str(chat_completion.choices[0].message.content))
 
-            data.update({"role": "assistant", "content": f"{chat_completion.choices[0].message.content}"})
+            data.append({"role": "assistant", "content": f"{chat_completion.choices[0].message.content}"})
     await state.update_data(context=data)
