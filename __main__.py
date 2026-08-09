@@ -1,3 +1,4 @@
+import logging
 import os
 
 from aiogram import Dispatcher
@@ -7,6 +8,11 @@ from aiohttp import web
 from config import Bot, render_url, webhook
 from handlers import routers
 from middlewares import Loger
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+)
 
 dp = Dispatcher()
 dp.update.outer_middleware(Loger())
