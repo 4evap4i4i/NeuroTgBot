@@ -21,7 +21,7 @@ async def message(message: Message, state: FSMContext, command: CommandObject):
         ) as client:
             chat_completion = await client.chat.completions.create(
                 messages=data,
-                model="openai/gpt-oss-20b",
+                model="openai/gpt-oss-120b",
             )
             await message.answer(str(chat_completion.choices[0].message.content))
 
