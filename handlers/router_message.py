@@ -11,6 +11,7 @@ async def message(message: Message):
     async with AsyncOpenAI(
             api_key=ai,  # This is the default and can be omitted
             http_client=DefaultAioHttpClient(),
+            base_url="https://api.groq.com/openai/v1"
         ) as client:
             chat_completion = await client.chat.completions.create(
                 messages=[
