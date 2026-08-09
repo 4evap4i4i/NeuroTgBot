@@ -6,8 +6,10 @@ from aiohttp import web
 
 from config import Bot, render_url, webhook
 from handlers import routers
+from middlewares import Loger
 
 dp = Dispatcher()
+dp.update.outer_middleware(Loger())
 for r in routers:
     dp.include_router(r)
 
