@@ -10,7 +10,7 @@ router_message = Router()
 
 @router_message.message(Command("say"))
 async def message(message: Message, state: FSMContext, command: CommandObject):
-    data = await state.get_value()
+    data = await state.get_value("context")
     data.update({"role": "user", "content": f"{command.args}"})
 
     async with AsyncOpenAI(
