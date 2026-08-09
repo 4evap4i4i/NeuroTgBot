@@ -22,4 +22,4 @@ async def message(message: Message):
                 ],
                 model="openai/gpt-oss-20b",
             )
-            await message.answer(str(chat_completion.response))
+            await message.answer(str(chat_completion.choices[0].message.content))
