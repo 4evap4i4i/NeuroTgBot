@@ -20,6 +20,6 @@ async def message(message: Message):
                         "content": f"{message.text}",
                     }
                 ],
-                model="gpt-oss-20b",
+                model="openai/gpt-oss-20b",
             )
             await message.answer(chat_completion)
