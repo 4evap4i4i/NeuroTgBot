@@ -1,29 +1,17 @@
 from aiogram import Router
 from aiogram.filters import Command, CommandObject
-from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from openai import AsyncOpenAI, DefaultAioHttpClient
-
-from config import ai
+from llm.chat_toole import save_message, get_history
+from llm.llm_call import call
 
 router_message = Router()
 
 @router_message.message(Command("say"))
-async def message(message: Message, state: FSMContext, command: CommandObject):
-    data = await state.get_value("context", [])
-        
-    data.append({"role": "user", "content": f"{command.args}"})
+async def message(message: Message, command: CommandObject):
 
-    async with AsyncOpenAI(
-            api_key=ai,  # This is the default and can be omitted
-            http_client=DefaultAioHttpClient(),
-            base_url="https://api.groq.com/openai/v1"
-        ) as client:
-            chat_completion = await client.chat.completions.create(
-                messages=data,
-                model="openai/gpt-oss-120b",
-            )
-            await message.answer(str(chat_completion.choices[0].message.content))
-
-            data.append({"role": "assistant", "content": f"{chat_completion.choices[0].message.content}"})
-    await state.update_data(context=data)
+    await save_message(message.from_user.id, "user", str(CommandObject.args))
+    data = await get_history()
+    
+    answer = await call(data)
+    await message.answer(answer)
+    await save_message(message.from_user.id, "assistant", str(answer))
