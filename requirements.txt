@@ -2,3 +2,4 @@ aiogram
 dotenv
 openai[aiohttp]
 PyMuPDF
+asyncpg
