@@ -15,7 +15,7 @@ logging.basicConfig(
 )
 
 dp = Dispatcher()
-dp.update.outer_middleware(Loger())
+#dp.update.outer_middleware(Loger())
 for r in routers:
     dp.include_router(r)
 
