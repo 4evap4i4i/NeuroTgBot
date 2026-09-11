@@ -10,7 +10,7 @@ router_message = Router()
 async def message(message: Message, command: CommandObject):
 
     await save_message(message.from_user.id, "user", str(CommandObject.args))
-    data = await get_history()
+    data = await get_history(message.from_user.id)
     
     answer = await call(data)
     await message.answer(answer)
