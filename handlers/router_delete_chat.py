@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS chat_history (
 
 
 @router.message(Command("reset"))
-async def reset_history(message: Message) -> None:
+async def router_reset_history(message: Message) -> None:
     conn = await asyncpg.connect(dsn=db_url)
     try:
         await conn.execute(CREATE_TABLE_SQL)
