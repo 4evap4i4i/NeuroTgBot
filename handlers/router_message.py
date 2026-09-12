@@ -1,7 +1,7 @@
 from aiogram import Router
 from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
-from llm.chat_toole import save_message, get_history
+from llm.chat_toole import save_message, get_history, ensure_table
 from llm.llm_call import call
 
 router_message = Router()
@@ -9,7 +9,7 @@ router_message = Router()
 @router_message.message(Command("say"))
 async def message(message: Message, command: CommandObject):
 
-    await save_message(message.from_user.id, "user", str(CommandObject.args))
+    await save_message(message.from_user.id, "user", content=command.args)
     data = await get_history(message.from_user.id)
     
     answer = await call(data)
