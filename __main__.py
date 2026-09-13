@@ -7,7 +7,9 @@ from aiohttp import web
 
 from config import Bot, render_url, webhook
 from handlers import routers
+from llm.chat_toole import ensure_table
 from middlewares import Loger
+from tools.get_document import ensure_documents_table
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,15 +18,20 @@ logging.basicConfig(
 
 dp = Dispatcher()
 dp.update.outer_middleware(Loger())
+
 for r in routers:
     dp.include_router(r)
 
+
 async def on_startup(bot):
+    await ensure_table()
+    await ensure_documents_table()
     await bot.set_webhook(f"{render_url}/webhook", secret_token=webhook)
+
 
 app = web.Application()
 dp.startup.register(on_startup)
 SimpleRequestHandler(dispatcher=dp, bot=Bot, secret_token=webhook).register(app, path="/webhook")
 setup_application(app, dp, bot=Bot)
 
-web.run_app(app, host="0.0.0.0", port=os.getenv("PORT"))
+web.run_app(app, host="0.0.0.0", port=int(os.getenv("PORT", 8080)))

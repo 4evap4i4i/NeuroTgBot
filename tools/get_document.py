@@ -22,28 +22,63 @@ import fitz  # PyMuPDF
 
 from config import db_url
 
+CREATE_DOCUMENTS_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS documents (
+    id         SERIAL PRIMARY KEY,
+    user_id    BIGINT NOT NULL,
+    filename   TEXT,
+    content    BYTEA NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+"""
 
-async def get_document(document_id: int) -> str:
+
+async def ensure_documents_table() -> None:
+    """Гарантирует существование таблицы documents. Вызывается на старте бота."""
+    conn = await asyncpg.connect(dsn=db_url)
+    try:
+        await conn.execute(CREATE_DOCUMENTS_TABLE_SQL)
+    finally:
+        await conn.close()
+
+
+async def save_document(user_id: int, filename: str, content: bytes) -> int:
+    """Сохраняет PDF в Neon и возвращает id новой записи."""
+    conn = await asyncpg.connect(dsn=db_url)
+    try:
+        await conn.execute(CREATE_DOCUMENTS_TABLE_SQL)
+        row = await conn.fetchrow(
+            "INSERT INTO documents (user_id, filename, content) VALUES ($1, $2, $3) RETURNING id",
+            user_id, filename, content,
+        )
+    finally:
+        await conn.close()
+    return row["id"]
+
+
+async def get_document(document_id: int, user_id: int) -> str:
     """
     Достаёт документ из Neon по id и возвращает его текстовое содержимое.
+    Ограничено владельцем (user_id), чтобы один пользователь не мог прочитать
+    чужой документ, подобрав id.
 
     :param document_id: id строки в таблице documents
-    :return: извлечённый текст, либо сообщение об ошибке, если документ
-             не найден или не содержит текстового слоя (тогда нужен
-             отдельный OCR/vision-путь — см. предыдущий вариант с рендером
-             страниц в картинки)
+    :param user_id: id пользователя Telegram, которому должен принадлежать документ
+    :return: извлечённый текст, либо сообщение о проблеме (документ не найден,
+             принадлежит другому пользователю, или это скан без текстового слоя —
+             тогда нужен отдельный OCR/vision-путь)
     """
     conn = await asyncpg.connect(dsn=db_url)
     try:
         row = await conn.fetchrow(
-            "SELECT filename, content FROM documents WHERE id = $1",
-            document_id,
+            "SELECT filename, content FROM documents WHERE id = $1 AND user_id = $2",
+            document_id, user_id,
         )
     finally:
         await conn.close()
 
     if row is None:
-        return f"Документ с id={document_id} не найден."
+        return f"Документ с id={document_id} не найден (или принадлежит другому пользователю)."
 
     filename, content = row["filename"], row["content"]
 
@@ -53,9 +88,22 @@ async def get_document(document_id: int) -> str:
 
     text = "\n".join(pages_text).strip()
     if not text:
-        raise ValueError(f"There's no any text in {filename}!")
+        return f"В документе «{filename}» не найдено текста (возможно, это скан — нужен OCR)."
 
     return text
+
+
+async def get_user_documents(user_id: int) -> list[dict]:
+    """Возвращает список документов пользователя (id + filename) для меню-кнопок."""
+    conn = await asyncpg.connect(dsn=db_url)
+    try:
+        rows = await conn.fetch(
+            "SELECT id, filename FROM documents WHERE user_id = $1 ORDER BY created_at DESC",
+            user_id,
+        )
+    finally:
+        await conn.close()
+    return [{"id": row["id"], "filename": row["filename"]} for row in rows]
 
 
 # JSON-схема для регистрации инструмента в вызове модели (tools=[...])

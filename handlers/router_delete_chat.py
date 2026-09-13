@@ -5,7 +5,7 @@ from aiogram.types import Message
 
 from config import db_url
 
-router = Router()
+router_delete_chat = Router()
 
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS chat_history (
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS chat_history (
 """
 
 
-@router.message(Command("reset"))
+@router_delete_chat.message(Command("reset"))
 async def router_reset_history(message: Message) -> None:
     conn = await asyncpg.connect(dsn=db_url)
     try:

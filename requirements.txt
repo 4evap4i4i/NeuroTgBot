@@ -1,5 +1,7 @@
 aiogram
 dotenv
 openai[aiohttp]
+asyncpg
+pymupdf
 PyMuPDF
 asyncpg
