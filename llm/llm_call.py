@@ -6,7 +6,7 @@ from config import ai
 from tools.document_pages import get_pages, get_pages_tool_schema, read_document, read_document_tool_schema
 from tools.get_document import get_document, get_document_tool_schema
 
-model = "qwen/qwen3.8-27b"
+model = "qwen/qwen3.6-27b"
 
 TOOLS = [get_document_tool_schema, read_document_tool_schema, get_pages_tool_schema]
 
